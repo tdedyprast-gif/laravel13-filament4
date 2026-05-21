@@ -6,6 +6,7 @@ use Filament\Support\Facades\FilamentView;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +17,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        if (app()->environment('production')) {
+            URL::forceScheme('https');
+        }
+        
         FilamentView::registerRenderHook(
             PanelsRenderHook::HEAD_END,
             fn (): HtmlString => new HtmlString(<<<'HTML'
