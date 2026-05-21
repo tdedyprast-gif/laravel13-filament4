@@ -1,0 +1,159 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: ${APP_NAME:-laravel-filament}-nginx
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./app:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./docker/certbot/www:/var/www/certbot
+      - ./docker/certbot/conf:/etc/letsencrypt
+    depends_on:
+      - app
+    networks:
+      - laravel
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  certbot:
+    image: certbot/certbot
+    container_name: ${APP_NAME:-laravel-filament}-certbot
+    volumes:
+      - ./docker/certbot/www:/var/www/certbot
+      - ./docker/certbot/conf:/etc/letsencrypt
+    networks:
+      - laravel
+
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: ${APP_NAME:-laravel-filament}-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    environment:
+      TZ: ${TZ:-Asia/Jakarta}
+    volumes:
+      - ./app:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
+      - ./docker/php/opcache.ini:/usr/local/etc/php/conf.d/10-opcache.ini:ro
+      - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+    depends_on:
+      - redis
+      - mysql
+    networks:
+      - laravel
+    mem_limit: 768m
+    cpus: "1.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: ${APP_NAME:-laravel-filament}-queue
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: ["supervisord", "-c", "/etc/supervisor/conf.d/laravel-worker.conf"]
+    environment:
+      TZ: ${TZ:-Asia/Jakarta}
+    volumes:
+      - ./app:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
+      - ./docker/supervisor/laravel-worker.conf:/etc/supervisor/conf.d/laravel-worker.conf:ro
+    depends_on:
+      - app
+      - redis
+      - mysql
+    networks:
+      - laravel
+    mem_limit: 384m
+    cpus: "0.50"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: ${APP_NAME:-laravel-filament}-scheduler
+    restart: unless-stopped
+    working_dir: /var/www/html
+    command: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    environment:
+      TZ: ${TZ:-Asia/Jakarta}
+    volumes:
+      - ./app:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
+    depends_on:
+      - app
+      - redis
+      - mysql
+    networks:
+      - laravel
+    mem_limit: 192m
+    cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: ${APP_NAME:-laravel-filament}-redis
+    restart: unless-stopped
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf", "--maxmemory", "${REDIS_MAXMEMORY:-256mb}"]
+    volumes:
+      - ./docker/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - ./storage/redis:/data
+    networks:
+      - laravel
+    mem_limit: 320m
+    cpus: "0.25"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  mysql:
+    image: mariadb:11.4
+    container_name: ${APP_NAME:-laravel-filament}-mysql
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-Asia/Jakarta}
+      MARIADB_DATABASE: ${MYSQL_DATABASE:-skpi_db}
+      MARIADB_USER: ${MYSQL_USER:-admin_skpi_db}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD:-UanG8s9A7Z5}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-UanG8s9A7Z56}
+    volumes:
+      - ./storage/mysql:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/conf.d/99-custom.cnf:ro
+    networks:
+      - laravel
+    mem_limit: 768m
+    cpus: "0.75"
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  laravel:
+    driver: bridge
