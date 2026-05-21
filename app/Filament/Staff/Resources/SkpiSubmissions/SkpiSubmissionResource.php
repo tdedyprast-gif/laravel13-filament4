@@ -21,7 +21,9 @@ class SkpiSubmissionResource extends Resource
 {
     protected static ?string $model = SkpiSubmission::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentCheck;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocumentCheck;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::DocumentCheck;
 
     protected static ?string $navigationLabel = 'Pengajuan SKPI';
 

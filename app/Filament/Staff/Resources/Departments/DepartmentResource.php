@@ -18,7 +18,9 @@ class DepartmentResource extends Resource
 {
     protected static ?string $model = Department::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingLibrary;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::BuildingLibrary;
 
     protected static ?string $recordTitleAttribute = 'Prodi';
 

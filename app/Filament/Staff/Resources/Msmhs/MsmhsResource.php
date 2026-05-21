@@ -17,7 +17,9 @@ class MsmhsResource extends Resource
 {
     protected static ?string $model = Msmhs::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUserGroup;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedAcademicCap;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::AcademicCap;
 
     protected static ?string $navigationLabel = 'Data Mahasiswa';
 

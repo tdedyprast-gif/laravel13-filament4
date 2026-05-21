@@ -21,7 +21,9 @@ class SkpiItemResource extends Resource
 {
     protected static ?string $model = SkpiItem::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedListBullet;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCheckBadge;
+
+    protected static string|BackedEnum|null $activeNavigationIcon = Heroicon::CheckBadge;
 
     protected static ?string $navigationLabel = 'Item SKPI';
 

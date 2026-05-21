@@ -31,6 +31,11 @@ class StaffPanelProvider extends PanelProvider
             ->path('staff')
             ->maxContentWidth(Width::Full)
             ->login()
+            ->viteTheme('resources/css/filament/staff/theme.css')
+            ->brandName('Digital SKPI')
+            ->brandLogo(asset('images/skpi-mark.svg'))
+            ->brandLogoHeight('2.35rem')
+            ->favicon(asset('images/skpi-mark.svg'))
             ->colors([
                 'primary' => Color::Emerald,
             ])
