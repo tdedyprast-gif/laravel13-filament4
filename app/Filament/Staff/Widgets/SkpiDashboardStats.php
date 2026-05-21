@@ -10,11 +10,50 @@ use App\Models\SkpiSubmission;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Auth;
 
 class SkpiDashboardStats extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
+        $user = Auth::user();
+
+        if ($user?->hasRole('mahasiswa')) {
+            $ownSubmissions = SkpiSubmission::query()
+                ->where('user_id', $user->id);
+
+            $latestSubmission = (clone $ownSubmissions)
+                ->latest()
+                ->first();
+
+            $status = $latestSubmission?->status ?? 'belum_ada';
+            $statusLabel = match ($status) {
+                'draft' => 'Draft',
+                'submitted' => 'Sedang Diverifikasi',
+                'verified' => 'Terverifikasi',
+                'rejected' => 'Perlu Perbaikan',
+                default => 'Belum Ada Pengajuan',
+            };
+
+            return [
+                Stat::make('Status Pengajuan SKPI', $statusLabel)
+                    ->description('Klik untuk membuka pengajuan Anda')
+                    ->descriptionIcon('heroicon-m-clipboard-document-check')
+                    ->color(match ($status) {
+                        'submitted' => 'info',
+                        'verified' => 'success',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    })
+                    ->url(SkpiSubmissionResource::getUrl('index')),
+                Stat::make('Jumlah Pengajuan Anda', (clone $ownSubmissions)->count())
+                    ->description('Data dibatasi dari akun login saat ini')
+                    ->descriptionIcon('heroicon-m-user')
+                    ->color('success')
+                    ->url(SkpiSubmissionResource::getUrl('index')),
+            ];
+        }
+
         $pendingActivations = User::query()
             ->where('activation_status', 'pending')
             ->count();

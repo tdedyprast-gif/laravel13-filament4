@@ -21,11 +21,13 @@ class SkpiItemsTable
             ->columns([
                 TextColumn::make('submission.mahasiswa.nim')
                     ->label('NIM')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: fn (): bool => Auth::user()?->hasRole('mahasiswa')),
                 TextColumn::make('submission.mahasiswa.nama_mahasiswa')
                     ->label('Mahasiswa')
                     ->searchable()
-                    ->limit(30),
+                    ->limit(30)
+                    ->toggleable(isToggledHiddenByDefault: fn (): bool => Auth::user()?->hasRole('mahasiswa')),
                 TextColumn::make('category')
                     ->label('Kategori')
                     ->badge()
@@ -53,7 +55,8 @@ class SkpiItemsTable
                 IconColumn::make('is_verified')
                     ->label('Valid')
                     ->boolean()
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn (): bool => ! Auth::user()?->hasRole('mahasiswa')),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -72,7 +75,8 @@ class SkpiItemsTable
                         'activity' => 'Kegiatan',
                     ]),
                 TernaryFilter::make('is_verified')
-                    ->label('Status Verifikasi'),
+                    ->label('Status Verifikasi')
+                    ->visible(fn (): bool => ! Auth::user()?->hasRole('mahasiswa')),
             ])
             ->recordActions([
                 Action::make('verify')
@@ -80,7 +84,7 @@ class SkpiItemsTable
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn ($record): bool => ! $record->is_verified)
+                    ->visible(fn ($record): bool => ! $record->is_verified && ! Auth::user()?->hasRole('mahasiswa'))
                     ->action(fn ($record) => $record->forceFill([
                         'is_verified' => true,
                         'verified_at' => now(),

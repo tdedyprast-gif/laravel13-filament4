@@ -24,11 +24,13 @@ class SkpiSubmissionsTable
                     ->placeholder('-'),
                 TextColumn::make('mahasiswa.nim')
                     ->label('NIM')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: fn (): bool => Auth::user()?->hasRole('mahasiswa')),
                 TextColumn::make('mahasiswa.nama_mahasiswa')
                     ->label('Mahasiswa')
                     ->searchable()
-                    ->limit(35),
+                    ->limit(35)
+                    ->toggleable(isToggledHiddenByDefault: fn (): bool => Auth::user()?->hasRole('mahasiswa')),
                 TextColumn::make('user.name')
                     ->label('Akun')
                     ->searchable()
@@ -79,7 +81,7 @@ class SkpiSubmissionsTable
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn ($record): bool => $record->status !== 'verified')
+                    ->visible(fn ($record): bool => $record->status !== 'verified' && ! Auth::user()?->hasRole('mahasiswa'))
                     ->action(fn ($record) => $record->forceFill([
                         'status' => 'verified',
                         'verified_at' => now(),
@@ -92,7 +94,7 @@ class SkpiSubmissionsTable
                     ->label('Tolak')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn ($record): bool => $record->status !== 'rejected')
+                    ->visible(fn ($record): bool => $record->status !== 'rejected' && ! Auth::user()?->hasRole('mahasiswa'))
                     ->form([
                         Textarea::make('rejection_note')
                             ->label('Catatan Penolakan')

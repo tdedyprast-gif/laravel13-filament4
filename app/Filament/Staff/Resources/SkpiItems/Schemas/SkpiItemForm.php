@@ -3,13 +3,14 @@
 namespace App\Filament\Staff\Resources\SkpiItems\Schemas;
 
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class SkpiItemForm
 {
@@ -22,7 +23,13 @@ class SkpiItemForm
                     ->schema([
                         Select::make('skpi_submission_id')
                             ->label('Pengajuan SKPI')
-                            ->relationship('submission', 'nomor_skpi')
+                            ->relationship(
+                                name: 'submission',
+                                titleAttribute: 'nomor_skpi',
+                                modifyQueryUsing: fn (Builder $query) => Auth::user()?->hasRole('mahasiswa')
+                                    ? $query->where('user_id', Auth::id())
+                                    : $query,
+                            )
                             ->getOptionLabelFromRecordUsing(fn ($record): string => trim(($record->nomor_skpi ?: 'Draft').' - '.$record->mahasiswa?->nim.' - '.$record->mahasiswa?->nama_mahasiswa))
                             ->searchable()
                             ->preload()
@@ -46,37 +53,47 @@ class SkpiItemForm
                             ->columnSpanFull(),
                         TextInput::make('organizer')
                             ->label('Penyelenggara')
+                            ->required()
                             ->maxLength(255),
                         TextInput::make('level')
                             ->label('Tingkat')
                             ->placeholder('Lokal, Regional, Nasional, Internasional')
+                            ->required()
                             ->maxLength(255),
                         TextInput::make('achievement')
                             ->label('Capaian')
                             ->placeholder('Juara 1, Peserta, Ketua, Anggota')
+                            ->required()
                             ->maxLength(255),
                         TextInput::make('certificate_number')
                             ->label('Nomor Sertifikat')
+                            ->required()
                             ->maxLength(255),
                         DatePicker::make('started_on')
-                            ->label('Tanggal Mulai'),
+                            ->label('Tanggal Mulai')
+                            ->required(),
                         DatePicker::make('ended_on')
-                            ->label('Tanggal Selesai'),
+                            ->label('Tanggal Selesai')
+                            ->required(),
                         TextInput::make('sort_order')
                             ->label('Urutan')
                             ->numeric()
+                            ->required()
                             ->default(0),
-                        FileUpload::make('certificate_file')
-                            ->label('File Bukti/Sertifikat')
-                            ->directory('skpi/certificates')
-                            ->downloadable()
-                            ->openable()
+                        TextInput::make('certificate_file')
+                            ->label('Link Bukti/Sertifikat')
+                            ->placeholder('https://drive.google.com/...')
+                            ->url()
+                            ->required()
+                            ->maxLength(255)
                             ->columnSpanFull(),
                         Textarea::make('description')
                             ->label('Deskripsi')
+                            ->required()
                             ->columnSpanFull(),
                     ]),
                 Section::make('Verifikasi')
+                    ->visible(fn (): bool => ! Auth::user()?->hasRole('mahasiswa'))
                     ->columns(2)
                     ->schema([
                         Toggle::make('is_verified')

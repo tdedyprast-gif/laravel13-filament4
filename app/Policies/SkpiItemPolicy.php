@@ -14,26 +14,46 @@ class SkpiItemPolicy
     
     public function viewAny(AuthUser $authUser): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return true;
+        }
+
         return $authUser->can('ViewAny:SkpiItem');
     }
 
     public function view(AuthUser $authUser, SkpiItem $skpiItem): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return $skpiItem->submission?->user_id === $authUser->id;
+        }
+
         return $authUser->can('View:SkpiItem');
     }
 
     public function create(AuthUser $authUser): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return filled($authUser->msmhs_id) && $authUser->activation_status === 'active';
+        }
+
         return $authUser->can('Create:SkpiItem');
     }
 
     public function update(AuthUser $authUser, SkpiItem $skpiItem): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return $skpiItem->submission?->user_id === $authUser->id;
+        }
+
         return $authUser->can('Update:SkpiItem');
     }
 
     public function delete(AuthUser $authUser, SkpiItem $skpiItem): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return $skpiItem->submission?->user_id === $authUser->id && ! $skpiItem->is_verified;
+        }
+
         return $authUser->can('Delete:SkpiItem');
     }
 

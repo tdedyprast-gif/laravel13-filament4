@@ -14,26 +14,47 @@ class SkpiSubmissionPolicy
     
     public function viewAny(AuthUser $authUser): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return true;
+        }
+
         return $authUser->can('ViewAny:SkpiSubmission');
     }
 
     public function view(AuthUser $authUser, SkpiSubmission $skpiSubmission): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return $skpiSubmission->user_id === $authUser->id;
+        }
+
         return $authUser->can('View:SkpiSubmission');
     }
 
     public function create(AuthUser $authUser): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return filled($authUser->msmhs_id) && $authUser->activation_status === 'active';
+        }
+
         return $authUser->can('Create:SkpiSubmission');
     }
 
     public function update(AuthUser $authUser, SkpiSubmission $skpiSubmission): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return $skpiSubmission->user_id === $authUser->id
+                && in_array($skpiSubmission->status, ['submitted', 'rejected'], true);
+        }
+
         return $authUser->can('Update:SkpiSubmission');
     }
 
     public function delete(AuthUser $authUser, SkpiSubmission $skpiSubmission): bool
     {
+        if ($authUser->hasRole('mahasiswa')) {
+            return false;
+        }
+
         return $authUser->can('Delete:SkpiSubmission');
     }
 
