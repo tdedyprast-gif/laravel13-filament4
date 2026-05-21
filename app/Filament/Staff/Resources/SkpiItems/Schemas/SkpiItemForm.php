@@ -88,7 +88,9 @@ class SkpiItemForm
                             ->maxLength(255)
                             ->columnSpanFull(),
                         Textarea::make('description')
-                            ->label('Deskripsi')
+                            ->visible(fn (): bool => ! Auth::user()?->hasRole('mahasiswa'))
+                            ->label('English')
+                            ->placeholder('English: Describe the achievement, activity, or skill in detail. ')
                             ->required()
                             ->columnSpanFull(),
                     ]),

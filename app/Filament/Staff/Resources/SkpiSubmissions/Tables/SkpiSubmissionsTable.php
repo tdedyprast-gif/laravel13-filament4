@@ -32,9 +32,7 @@ class SkpiSubmissionsTable
                     ->limit(35)
                     ->toggleable(isToggledHiddenByDefault: fn (): bool => Auth::user()?->hasRole('mahasiswa')),
                 TextColumn::make('user.name')
-                    ->label('Akun')
-                    ->searchable()
-                    ->toggleable(),
+                    ->hidden(),
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {

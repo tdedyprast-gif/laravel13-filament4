@@ -2,11 +2,14 @@
 
 namespace App\Filament\Staff\Resources\Users\Schemas;
 
+use App\Models\Msmhs;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 
 class UserForm
@@ -19,6 +22,10 @@ class UserForm
                     ->columns(2)
                     ->schema([
                         TextInput::make('name')
+                            ->label('Name')
+                            ->helperText('Terisi otomatis jika user dihubungkan ke data MSMHS.')
+                            ->disabled(fn (Get $get): bool => filled($get('msmhs_id')))
+                            ->saved()
                             ->required(),
                         TextInput::make('email')
                             ->label('Email address')
@@ -29,7 +36,15 @@ class UserForm
                             ->relationship('mahasiswa', 'nama_mahasiswa')
                             ->getOptionLabelFromRecordUsing(fn ($record): string => "{$record->nim} - {$record->nama_mahasiswa}")
                             ->searchable(['nim', 'nama_mahasiswa'])
-                            ->preload(),
+                            ->preload()
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, ?int $state): void {
+                                if (blank($state)) {
+                                    return;
+                                }
+
+                                $set('name', Msmhs::query()->find($state)?->nama_mahasiswa);
+                            }),
                         TextInput::make('password')
                             ->password()
                             ->dehydrated(fn (?string $state): bool => filled($state))
